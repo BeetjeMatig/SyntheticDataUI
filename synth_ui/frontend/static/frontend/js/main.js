@@ -133,14 +133,17 @@ function init() {
                       feedback.innerHTML = formatStatSummary(
                         statusData.metrics
                       );
++                      attachInfoIconListeners();
                     } else if (type === "performance") {
                       feedback.innerHTML = formatPerformanceMetrics(
                         statusData.metrics
                       );
++                      attachInfoIconListeners();
                     } else if (type === "privacy") {
                       feedback.innerHTML = formatPrivacyMetrics(
                         statusData.metrics
                       );
++                      attachInfoIconListeners();
                     } else {
                       feedback.innerHTML =
                         "<pre>" +
@@ -417,11 +420,22 @@ function prevPage() {
 
 // Format numerical summary metrics into an HTML table
 function formatStatSummary(metrics) {
-  const ns = metrics.numeric_summary;
-  const stats = Object.keys(ns);
-  const variables = Object.keys(ns.count_real);
-  let html =
-    '<div class="overflow-x-auto"><table class="min-w-full table-auto border-collapse border border-gray-200">';
+  // Explanations for descriptive statistics
+  const statExplanations = {
+    count: "Counts all non-missing records, showing how many valid data points are present.",
+    mean: "Arithmetic average of the values, indicating the central tendency of the data.",
+    std: "Standard deviation, measuring the dispersion of values around the mean.",
+    min: "The smallest observed value in the dataset, indicating the lower bound.",
+    "25%": "First quartile (25th percentile), below which 25% of the data points fall.",
+    "50%": "Median (50th percentile), the midpoint that divides the data into two equal halves.",
+    "75%": "Third quartile (75th percentile), below which 75% of data points fall.",
+    max: "The largest observed value in the dataset, indicating the upper bound."
+  };
+   const ns = metrics.numeric_summary;
+   const stats = Object.keys(ns);
+   const variables = Object.keys(ns.count_real);
+   let html =
+     '<div class="overflow-x-auto"><table class="min-w-full table-auto border-collapse border border-gray-200">';
   // header
   html += '<thead><tr><th class="px-4 py-2 border border-gray-200"></th>';
   variables.forEach((variable) => {
@@ -430,63 +444,95 @@ function formatStatSummary(metrics) {
   html += "</tr></thead><tbody>";
   // rows
   stats.forEach((stat) => {
-    html += `<tr><td class="px-4 py-2 border border-gray-200 font-semibold bg-gray-100">${stat.replace(
-      /_/g,
-      " "
-    )}</td>`;
-    variables.forEach((variable) => {
-      const value = ns[stat][variable];
-      const display = typeof value === "number" ? value.toFixed(2) : value;
-      html += `<td class="px-4 py-2 border border-gray-200 text-right">${display}</td>`;
-    });
-    html += "</tr>";
-  });
-  html += "</tbody></table></div>";
-  return html;
+    // Prepare display name and tooltip
+    const displayStat = stat.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const baseStat = stat.replace(/_real|_synth/g, "");
+    const explanation = statExplanations[baseStat] || "";
+    html += `<tr><td class="px-4 py-2 border border-gray-200 font-semibold bg-gray-100">${displayStat}<span class="info-icon ml-1 text-blue-500 cursor-pointer" data-tooltip="${explanation}" title="${explanation}">ℹ️</span></td>`;
+     variables.forEach((variable) => {
+       const value = ns[stat][variable];
+       const display = typeof value === "number" ? value.toFixed(2) : value;
+       html += `<td class="px-4 py-2 border border-gray-200 text-right">${display}</td>`;
+     });
+     html += "</tr>";
+   });
+   html += "</tbody></table></div>";
+   return html;
 }
 
 // Format performance metrics into an HTML table
 function formatPerformanceMetrics(metrics) {
-  let html =
-    '<div class="overflow-x-auto"><table class="min-w-full table-auto border-collapse border border-gray-200">';
+    // Explanations for performance metrics
+    const metricExplanations = {
+        general_score: "General Score: a weighted aggregate summarizing all performance metrics into one overall quality indicator.",
+        column_shapes: "Column Shapes: compares distribution shapes of each individual column between real and synthetic data.",
+        pair_trends: "Pair Trends: evaluates how well relationships and correlations between column pairs are preserved.",
+        category_coverage: "Category Coverage: fraction of real categorical levels that appear in the synthetic data to ensure diversity.",
+        missing_value_similarity: "Missing Value Similarity: compares patterns and proportions of missing entries between datasets.",
+        range_coverage: "Range Coverage: checks if synthetic values span the same numeric range as the real data.",
+        statistic_similarity: "Statistic Similarity: measures how closely key statistics (mean, std) of numeric columns match."
+    };
+     let html =
+         '<div class="overflow-x-auto"><table class="min-w-full table-auto border-collapse border border-gray-200">';
   // header
   html +=
     '<thead><tr><th class="px-4 py-2 border border-gray-200 bg-gray-50">Metric</th><th class="px-4 py-2 border border-gray-200 bg-gray-50">Value</th></tr></thead><tbody>';
   // rows
   Object.entries(metrics).forEach(([key, value]) => {
-    const displayKey = key
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-    const displayVal =
-      typeof value === "number"
-        ? value.toFixed(2)
-        : value == null
-        ? "N/A"
-        : value;
-    html += `<tr><td class="px-4 py-2 border border-gray-200 font-semibold bg-gray-100">${displayKey}</td><td class="px-4 py-2 border border-gray-200 text-right">${displayVal}</td></tr>`;
-  });
-  html += "</tbody></table></div>";
-  return html;
+         const displayKey = key
+             .replace(/_/g, " ")
+             .replace(/\b\w/g, (c) => c.toUpperCase());
+         const displayVal =
+             typeof value === "number"
+                 ? value.toFixed(2)
+                 : value == null
+                 ? "N/A"
+                 : value;
+        // Add info icon with tooltip
+        const explanation = metricExplanations[key] || "";
+        html += `<tr><td class="px-4 py-2 border border-gray-200 font-semibold bg-gray-100">${displayKey}<span class="info-icon ml-1 text-blue-500 cursor-pointer" data-tooltip="${explanation}" title="${explanation}">ℹ️</span></td><td class="px-4 py-2 border border-gray-200 text-right">${displayVal}</td></tr>`;
+     });
+     html += "</tbody></table></div>";
+     return html;
 }
 
 // Format privacy metrics into an HTML table
 function formatPrivacyMetrics(metrics) {
-  let html =
-    '<div class="overflow-x-auto"><table class="min-w-full table-auto border-collapse border border-gray-200">';
+    // Explanations for privacy metrics
+    const privacyExplanations = {
+        dcr_overfitting: "Overfitting Protection: assesses if synthetic records are overly similar to training examples, indicating potential privacy risk.",
+        dcr_baseline: "Baseline Protection: evaluates privacy risk by comparing synthetic data to a random baseline model.",
+        disclosure: "Disclosure Protection: estimates how well sensitive attributes are shielded when subsets of known features are exposed.",
+        privacy_score: "Privacy Score: a weighted combination of protection metrics to gauge overall privacy assurance."
+    };
+     let html =
+         '<div class="overflow-x-auto"><table class="min-w-full table-auto border-collapse border border-gray-200">';
   html +=
     '<thead><tr><th class="px-4 py-2 border border-gray-200 bg-gray-50">Metric</th><th class="px-4 py-2 border border-gray-200 bg-gray-50">Value</th></tr></thead><tbody>';
   Object.entries(metrics).forEach(([key, value]) => {
-    const displayKey = key
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-    const displayVal =
-      typeof value === "number"
-        ? value.toFixed(2)
-        : value == null
-        ? "N/A"
-        : value;
-    html += `<tr><td class="px-4 py-2 border border-gray-200 font-semibold bg-gray-100">${displayKey}</td><td class="px-4 py-2 border border-gray-200 text-right">${displayVal}</td></tr>`;
+         const displayKey = key
+             .replace(/_/g, " ")
+             .replace(/\b\w/g, (c) => c.toUpperCase());
+         const displayVal =
+             typeof value === "number"
+                 ? value.toFixed(2)
+                 : value == null
+                 ? "N/A"
+                 : value;
+        // Add info icon with tooltip
+        const explanation = privacyExplanations[key] || "";
+        html += `<tr><td class="px-4 py-2 border border-gray-200 font-semibold bg-gray-100">${displayKey}<span class="info-icon ml-1 text-blue-500 cursor-pointer" data-tooltip="${explanation}" title="${explanation}">ℹ️</span></td><td class="px-4 py-2 border border-gray-200 text-right">${displayVal}</td></tr>`;
+     });
+     html += "</tbody></table></div>";
+     return html;
+}
+
+// Attach click handlers to info icons for pop-up tooltips
+function attachInfoIconListeners() {
+  document.querySelectorAll('.info-icon').forEach(icon => {
+    icon.addEventListener('click', () => {
+      const msg = icon.getAttribute('data-tooltip') || '';
+      alert(msg);
+    });
   });
-  html += "</tbody></table></div>";
-  return html;
 }
