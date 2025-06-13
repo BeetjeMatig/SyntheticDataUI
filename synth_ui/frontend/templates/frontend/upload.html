@@ -1,0 +1,59 @@
+{% extends "frontend/base.html" %}
+{% block content %}
+    <div class="flex flex-col items-center space-y-6 mt-12">
+        <!-- Upload Card -->
+        <div class="bg-white shadow-lg rounded-2xl w-full max-w-2xl p-8">
+            <h1 class="text-2xl font-bold mb-4 text-center text-gray-800">Upload CSV</h1>
+            <form id="upload-form"
+                  method="post"
+                  enctype="multipart/form-data"
+                  action="{% url 'upload_csv' %}">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <input name="file"
+                           id="file-input"
+                           type="file"
+                           required
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                {% if upload_error %}
+                    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-sm">{{ upload_error }}</div>
+                {% endif %}
+                <div class="text-center">
+                    <button type="submit"
+                            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg">
+                        📤 Upload CSV
+                    </button>
+                </div>
+            </form>
+        </div>
+        <!-- Footer is now included in base.html -->
+    </div>
+    <!-- JS Validation -->
+    <script>
+document.getElementById("upload-form").addEventListener("submit", function (e) {
+  const fileInput = document.getElementById("file-input");
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const fileName = file.name.toLowerCase();
+  const validTypes = ["text/csv", "application/vnd.ms-excel"];
+  const isCSV = fileName.endsWith(".csv") && validTypes.includes(file.type);
+
+  if (!isCSV) {
+    e.preventDefault();
+    const existing = document.getElementById("upload-error-js");
+    if (!existing) {
+      const errorBox = document.createElement("div");
+      errorBox.id = "upload-error-js";
+      errorBox.className = "mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-sm";
+      errorBox.textContent = "⚠️ Only .csv files are allowed.";
+      fileInput.parentNode.insertAdjacentElement("afterend", errorBox);
+    }
+  } else {
+    const errorBox = document.getElementById("upload-error-js");
+    if (errorBox) errorBox.remove();
+  }
+});
+    </script>
+{% endblock %}

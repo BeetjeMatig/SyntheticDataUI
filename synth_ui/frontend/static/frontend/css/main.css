@@ -1,0 +1,53 @@
+/* Slim scroll */
+.scrollbar-hide::-webkit-scrollbar {
+  height: 6px;
+}
+.scrollbar-hide::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 10px;
+}
+.scrollbar-hide::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Style for cells in edit mode */
+.editing-cell {
+  white-space: normal !important;
+  max-width: none !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* Modal Styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+}
+
+/* Blur effect */
+.content-blur {
+  filter: blur(4px);
+  transition: filter 0.3s ease-out;
+}
+
+/* Style for message fade-out */
+.fixed.top-6.right-6.z-50 > div[role="alert"] {
+    transition: opacity 0.5s ease-out;
+}

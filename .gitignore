@@ -1,0 +1,40 @@
+# Database
+*.sqlite3
+
+# Bytecode & caches
+__pycache__/
+*.pyc
+.mypy_cache/
+.pytest_cache/
+
+# Django
+**/migrations/
+
+# Uploads / exports
+*.csv
+*.json
+*.xlsx
+
+# Logs & coverage
+*.log
+logs/
+.coverage
+htmlcov/
+coverage.xml
+
+# Virtual‐env & builds
+env/
+venv/
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Node
+node_modules/
+
+# Editors & OS
+.vscode/
+.idea/
+.ropeproject/
+.DS_Store
